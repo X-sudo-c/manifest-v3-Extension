@@ -1,5 +1,13 @@
-let trackerCount = 0;
+let trackerCount = {
+  url: 0,
+  network: 0,
+  canvas: 0,
+  webgl: 0,
+  storage: 0,
+  behavioral: 0
+};
 let easyListRules = [];
+let currentTabId = null;
 
 // Store the last fetch timestamp
 const LAST_FETCH_KEY = 'lastEasyListFetch';
@@ -134,13 +142,41 @@ async function fetchEasyList() {
   }
 }
 
+// Reset counter for a specific tab
+async function resetCounter(tabId) {
+  trackerCount = {
+    url: 0,
+    network: 0,
+    canvas: 0,
+    webgl: 0,
+    storage: 0,
+    behavioral: 0
+  };
+  currentTabId = tabId;
+  await chrome.storage.local.set({ trackerCount });
+  console.log(`Reset tracker count for tab ${tabId}`);
+}
+
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'TRACKER_COUNT') {
     try {
-      trackerCount += message.count;
-      chrome.storage.local.set({ trackerCount });
-      console.log(`Content script detected ${message.count} trackers`);
+      // Only count trackers for the current tab
+      if (sender.tab.id === currentTabId) {
+        // Update counts for each type
+        Object.keys(message.counts).forEach(type => {
+          trackerCount[type] += message.counts[type];
+        });
+        
+        // Store updated counts
+        chrome.storage.local.set({ trackerCount }, () => {
+          if (chrome.runtime.lastError) {
+            console.error('Error storing counts:', chrome.runtime.lastError);
+          }
+        });
+        
+        console.log(`Content script detected trackers for tab ${currentTabId}:`, message.counts);
+      }
       sendResponse({ success: true });
     } catch (error) {
       console.error('Error handling tracker count:', error);
@@ -150,13 +186,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-// Reset counter when navigating to a new page
+// Listen for messages from popup
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'getCounts') {
+    // Get the latest counts from storage
+    chrome.storage.local.get(['trackerCount'], (result) => {
+      if (chrome.runtime.lastError) {
+        console.error('Error getting counts:', chrome.runtime.lastError);
+        sendResponse({ counts: trackerCount }); // Fallback to in-memory counts
+      } else {
+        sendResponse({ counts: result.trackerCount || trackerCount });
+      }
+    });
+    return true; // Keep the message channel open for async response
+  }
+});
+
+// Handle tab updates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'loading') {
-    trackerCount = 0;
-    chrome.storage.local.set({ trackerCount });
-    console.log('Reset tracker count for new page');
+    resetCounter(tabId);
   }
+});
+
+// Handle tab activation (switching tabs)
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  resetCounter(activeInfo.tabId);
 });
 
 // Initialize

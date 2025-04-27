@@ -5,43 +5,38 @@
   <style>
     body {
       width: 300px;
-      padding: 20px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      background: #f5f5f5;
-      margin: 0;
+      padding: 10px;
+      font-family: Arial, sans-serif;
     }
-    .container {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    .tracker-type {
+      margin: 5px 0;
+      padding: 5px;
+      border-radius: 4px;
+      background-color: #f0f0f0;
     }
-    h1 {
-      font-size: 24px;
-      color: #333;
-      margin: 0 0 20px 0;
-      text-align: center;
-    }
-    .counter {
-      font-size: 48px;
+    .tracker-count {
       font-weight: bold;
-      color: #ff4444;
-      text-align: center;
-      margin: 20px 0;
+      color: #e74c3c;
     }
-    .label {
-      text-align: center;
-      color: #666;
-      font-size: 14px;
+    .total {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #ccc;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Tracker Counter</h1>
-    <div class="counter" id="trackerCount">0</div>
-    <div class="label">trackers detected on this page</div>
+  <h2>Tracker Counter</h2>
+  <div id="trackerTypes">
+    <div class="tracker-type">URL-based Trackers: <span id="urlCount" class="tracker-count">0</span></div>
+    <div class="tracker-type">Network Trackers: <span id="networkCount" class="tracker-count">0</span></div>
+    <div class="tracker-type">Canvas Fingerprinting: <span id="canvasCount" class="tracker-count">0</span></div>
+    <div class="tracker-type">WebGL Fingerprinting: <span id="webglCount" class="tracker-count">0</span></div>
+    <div class="tracker-type">Storage-based Trackers: <span id="storageCount" class="tracker-count">0</span></div>
+    <div class="tracker-type">Behavioral Trackers: <span id="behavioralCount" class="tracker-count">0</span></div>
   </div>
+  <div class="total">Total Trackers: <span id="totalCount" class="tracker-count">0</span></div>
   <script src="popup.js"></script>
 </body>
 </html> 
